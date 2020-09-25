@@ -1,35 +1,40 @@
 'use strict';
 module.exports = {
 	up: async (queryInterface, Sequelize) => {
-		await queryInterface.createTable('Messages', {
+		await queryInterface.createTable('Students', {
 			id: {
 				allowNull: false,
 				primaryKey: true,
 				type: Sequelize.UUID,
 				defaultValue: Sequelize.UUIDV4,
 			},
-			publicId: {
-				allowNull: false,
+			UserId: {
 				type: Sequelize.UUID,
-				defaultValue: Sequelize.UUIDV4,
-			},
-			UserEmail: {
-				type: Sequelize.STRING,
 				references: {
 					model: 'Users',
-					key: 'email',
+					key: 'id',
 				},
 				allowNull: false,
 				onUpdate: 'CASCADE',
 				onDelete: 'CASCADE',
 			},
-			phoneNumber: {
-				type: Sequelize.STRING(20),
+			firstName: {
 				allowNull: false,
+				type: Sequelize.STRING(50),
 			},
-
-			defaultText: {
-				type: Sequelize.STRING(250),
+			lastName: {
+				allowNull: false,
+				type: Sequelize.STRING(50),
+			},
+			email: {
+				type: Sequelize.STRING,
+				validate: {
+					isEmail: true,
+				},
+			},
+			phoneNumber: {
+				type: Sequelize.STRING(10),
+				allowNull: false,
 			},
 			createdAt: {
 				allowNull: false,
@@ -42,6 +47,6 @@ module.exports = {
 		});
 	},
 	down: async (queryInterface, Sequelize) => {
-		await queryInterface.dropTable('Messages');
+		await queryInterface.dropTable('Students');
 	},
 };

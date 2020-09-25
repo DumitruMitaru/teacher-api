@@ -28,7 +28,11 @@ async function getUserProfile(req, res, next) {
 	const accessToken = req.headers.authorization.split(' ')[1]; // should be present & safe because auth0 middleware already validated auth token.
 
 	// https://auth0.github.io/node-auth0/module-auth.AuthenticationClient.html#getProfile
-	req.userProfile = await auth0.getProfile(accessToken);
+	const user = await auth0.getProfile(accessToken);
+	req.user = {
+		...req.user,
+		...user,
+	};
 
 	next();
 }

@@ -1,60 +1,23 @@
-const newrelic = require('newrelic');
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
 const { sequelize } = require('../models');
 const {
-	models: { User, Message },
+	models: { User, Student },
 } = sequelize;
 
 const auth = require('../middleware/auth');
-const rateLimiter = require('../middleware/rate-limiter');
-const { sendMessage } = require('./lib');
-
-router.get('/message', auth, async (req, res, next) => {
-	try {
-		const messages = await Message.findAll({
-			attributes: ['id', 'publicId', 'phoneNumber', 'defaultText'],
-			where: {
-				UserEmail: req.userProfile.email,
-			},
-			order: [['createdAt', 'DESC']],
-		});
-
-		res.json(messages);
-	} catch (error) {
-		next(error);
-	}
-});
 
 router.get('/user', auth, async (req, res, next) => {
 	try {
-		const { email } = req.userProfile;
-
-		let user = await User.findByPk(email, {
-			attributes: ['email', 'messagesRemaining'],
-		});
+		let user = await User.findOne({ where: { auth0Id: req.user.sub } });
 
 		if (!user) {
 			user = await User.create({
-				email: email,
+				auth0Id: req.user.sub,
+				email: req.user.email,
 			});
-
-			try {
-				const totalUsers = await user.count();
-				newrelic.recordMetric('Users/total', totalUsers);
-			} catch (error) {
-				next(error);
-			}
-
-			if (process.env.NEW_USER_WEBHOOK) {
-				axios.post(process.env.NEW_USER_WEBHOOK, null, {
-					params: {
-						text: `New user ${email} has signed up!`,
-					},
-				});
-			}
 		}
 
 		res.json(user);
@@ -63,87 +26,62 @@ router.get('/user', auth, async (req, res, next) => {
 	}
 });
 
-router.get('/message/:publicId/send', rateLimiter, sendMessage);
-
-router.post('/message/:publicId/send', rateLimiter, sendMessage);
-
-router.post('/message', auth, async (req, res, next) => {
+router.get('/student', auth, async (req, res, next) => {
 	try {
-		const { phoneNumber, defaultText } = req.body;
-
-		const createdMessage = await Message.create({
-			UserEmail: req.userProfile.email,
-			phoneNumber,
-			defaultText,
+		let user = await User.findOne({
+			where: { auth0Id: req.user.sub },
+			include: [
+				{
+					model: Student,
+				},
+			],
+			order: [[Student, 'firstName', 'ASC']],
 		});
 
-		res.status(201).json(createdMessage);
+		res.json(user?.Students || []);
 	} catch (error) {
 		next(error);
 	}
 });
 
-router.put('/message/:id', auth, async (req, res, next) => {
+router.put('/student/:id', auth, async (req, res, next) => {
 	try {
-		const { phoneNumber, defaultText } = req.body;
-		const [_, updatedMessage] = await Message.update(
+		const { firstName, lastName, phoneNumber, email } = req.body;
+		const [_, [student]] = await Student.update(
 			{
+				firstName,
+				lastName,
+				email,
 				phoneNumber,
-				defaultText,
 			},
 			{
-				where: {
-					id: req.params.id,
-					UserEmail: req.userProfile.email,
-				},
+				where: { id: req.params.id },
 				returning: true,
-				plain: true,
 			}
 		);
 
-		res.status(200).json(updatedMessage);
+		res.json(student);
 	} catch (error) {
 		next(error);
 	}
 });
 
-router.put('/message/:id/change-publicId', auth, async (req, res, next) => {
+router.post('/student', auth, async (req, res, next) => {
 	try {
-		const [_, updatedMessage] = await Message.update(
-			{
-				publicId: uuidv4(),
-			},
-			{
-				where: {
-					id: req.params.id,
-					UserEmail: req.userProfile.email,
-				},
-				returning: true,
-				plain: true,
-			}
-		);
-
-		res.status(200).json(updatedMessage);
-	} catch (error) {
-		next(error);
-	}
-});
-
-router.delete('/message/:id', auth, async (req, res, next) => {
-	try {
-		const id = req.params.id;
-
-		const message = await Message.findByPk(id, {
-			where: { UserEmail: req.userProfile.email },
+		let user = await User.findOne({
+			where: { auth0Id: req.user.sub },
 		});
 
-		if (message) {
-			await message.destroy();
-		} else {
-			throw new Error('Message Not Found');
-		}
+		const { firstName, lastName, phoneNumber, email } = req.body;
+		const student = await Student.create({
+			firstName,
+			lastName,
+			email,
+			phoneNumber,
+			UserId: user.id,
+		});
 
-		res.status(200).json(message);
+		res.json(student);
 	} catch (error) {
 		next(error);
 	}

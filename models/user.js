@@ -9,20 +9,19 @@ module.exports = (sequelize, DataTypes) => {
 		 */
 		static associate(models) {
 			// define association here
-			this.hasMany(models.Message);
+			this.hasMany(models.Student);
 		}
 	}
 	User.init(
 		{
-			email: {
-				type: DataTypes.STRING,
-				primaryKey: true,
-			},
-			messagesRemaining: {
-				type: DataTypes.INTEGER,
+			id: {
 				allowNull: false,
-				defaultValue: 100,
+				primaryKey: true,
+				type: DataTypes.UUID,
+				defaultValue: DataTypes.UUIDV4,
 			},
+			email: DataTypes.STRING,
+			auth0Id: DataTypes.STRING,
 		},
 		{
 			sequelize,
