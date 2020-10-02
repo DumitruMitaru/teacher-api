@@ -1,10 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { v4: uuidv4 } = require('uuid');
-const axios = require('axios');
+const { pick } = require('lodash');
 const { sequelize } = require('../models');
 const {
-	models: { User, Student },
+	models: { User, Student, Event, StudentsEvents },
 } = sequelize;
 
 const auth = require('../middleware/auth');
@@ -44,6 +43,33 @@ router.get('/student', auth, async (req, res, next) => {
 	}
 });
 
+router.get('/event', auth, async (req, res, next) => {
+	try {
+		let user = await User.findOne({
+			where: { auth0Id: req.user.sub },
+			include: [
+				{
+					model: Event,
+					include: [
+						{
+							model: Student,
+							attributes: ['id', 'firstName', 'lastName'],
+							through: {
+								model: StudentsEvents,
+								attributes: [],
+							},
+						},
+					],
+				},
+			],
+		});
+
+		res.json(user?.Events || []);
+	} catch (error) {
+		next(error);
+	}
+});
+
 router.put('/student/:id', auth, async (req, res, next) => {
 	try {
 		const { firstName, lastName, phoneNumber, email } = req.body;
@@ -66,6 +92,21 @@ router.put('/student/:id', auth, async (req, res, next) => {
 	}
 });
 
+router.put('/event/:id', auth, async (req, res, next) => {
+	try {
+		const [_, [event]] = await Event.update(req.body, {
+			where: { id: req.params.id },
+			returning: true,
+		});
+
+		await event.setStudents(req.body.Students);
+
+		res.json(event);
+	} catch (error) {
+		next(error);
+	}
+});
+
 router.post('/student', auth, async (req, res, next) => {
 	try {
 		let user = await User.findOne({
@@ -83,6 +124,33 @@ router.post('/student', auth, async (req, res, next) => {
 
 		res.json(student);
 	} catch (error) {
+		next(error);
+	}
+});
+
+router.post('/event', auth, async (req, res, next) => {
+	let transaction = await sequelize.transaction();
+
+	try {
+		let user = await User.findOne({
+			where: { auth0Id: req.user.sub },
+			transaction,
+		});
+
+		const event = await Event.create(
+			{
+				...req.body,
+				UserId: user.id,
+			},
+			{ transaction }
+		);
+
+		await event.setStudents(req.body.Students, { transaction });
+
+		res.json(event);
+		await transaction.commit();
+	} catch (error) {
+		await transaction.rollback();
 		next(error);
 	}
 });
