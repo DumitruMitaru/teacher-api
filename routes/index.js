@@ -155,4 +155,18 @@ router.post('/event', auth, async (req, res, next) => {
 	}
 });
 
+router.delete('/event/:id', auth, async (req, res, next) => {
+	try {
+		await Event.destroy({
+			where: {
+				id: req.params.id,
+			},
+		});
+
+		res.status(200).send();
+	} catch (error) {
+		next(error);
+	}
+});
+
 module.exports = router;
