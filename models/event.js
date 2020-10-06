@@ -34,22 +34,6 @@ module.exports = (sequelize, DataTypes) => {
 			endDate: {
 				type: DataTypes.DATE,
 			},
-			isRecurring: {
-				type: DataTypes.BOOLEAN,
-				allowNull: false,
-			},
-			allDay: {
-				type: DataTypes.BOOLEAN,
-			},
-			startTime: {
-				type: DataTypes.DATE,
-			},
-			endTime: {
-				type: DataTypes.DATE,
-			},
-			rrule: {
-				type: DataTypes.JSONB,
-			},
 		},
 		{
 			sequelize,

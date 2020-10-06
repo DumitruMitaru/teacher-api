@@ -29,22 +29,6 @@ module.exports = {
 			endDate: {
 				type: Sequelize.DATE,
 			},
-			isRecurring: {
-				type: Sequelize.BOOLEAN,
-				allowNull: false,
-			},
-			allDay: {
-				type: Sequelize.BOOLEAN,
-			},
-			startTime: {
-				type: Sequelize.DATE,
-			},
-			endTime: {
-				type: Sequelize.DATE,
-			},
-			rrule: {
-				type: Sequelize.JSONB,
-			},
 			createdAt: {
 				allowNull: false,
 				type: Sequelize.DATE,
