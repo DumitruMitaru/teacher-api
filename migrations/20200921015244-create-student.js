@@ -8,6 +8,11 @@ module.exports = {
 				type: Sequelize.UUID,
 				defaultValue: Sequelize.UUIDV4,
 			},
+			publicProfileId: {
+				allowNull: false,
+				type: Sequelize.UUID,
+				defaultValue: Sequelize.UUIDV4,
+			},
 			UserId: {
 				type: Sequelize.UUID,
 				references: {

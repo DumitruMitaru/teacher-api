@@ -1,0 +1,27 @@
+const express = require('express');
+const router = express.Router();
+const { pick } = require('lodash');
+const { sequelize } = require('../models');
+const {
+	models: { User, Student, Event, StudentsEvents },
+} = sequelize;
+
+const auth = require('../middleware/auth');
+
+module.exports = router => {
+	router.delete('/event/bulk', auth, async (req, res, next) => {
+		try {
+			await Event.destroy({
+				where: {
+					id: req.body,
+				},
+			});
+
+			res.status(200).send();
+		} catch (error) {
+			next(error);
+		}
+	});
+
+	return router;
+};
