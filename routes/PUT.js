@@ -3,7 +3,14 @@ const router = express.Router();
 const { pick } = require('lodash');
 const { sequelize } = require('../models');
 const {
-	models: { User, Student, Event, StudentsEvents, PracticeNote },
+	models: {
+		Announcement,
+		Event,
+		PracticeNote,
+		Student,
+		StudentsEvents,
+		User,
+	},
 } = sequelize;
 
 const auth = require('../middleware/auth');
@@ -44,6 +51,24 @@ module.exports = router => {
 			);
 
 			res.json(note);
+		} catch (error) {
+			next(error);
+		}
+	});
+
+	router.put('/announcement/:id', auth, async (req, res, next) => {
+		try {
+			const [_, [announcement]] = await Announcement.update(
+				{
+					text: req.body.text,
+				},
+				{
+					where: { id: req.params.id },
+					returning: true,
+				}
+			);
+
+			res.json(announcement);
 		} catch (error) {
 			next(error);
 		}

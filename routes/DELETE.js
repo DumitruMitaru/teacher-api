@@ -3,7 +3,7 @@ const router = express.Router();
 const { pick } = require('lodash');
 const { sequelize } = require('../models');
 const {
-	models: { User, Student, Event, StudentsEvents },
+	models: { User, Student, Event, StudentsEvents, Announcement },
 } = sequelize;
 
 const auth = require('../middleware/auth');
@@ -14,6 +14,20 @@ module.exports = router => {
 			await Event.destroy({
 				where: {
 					id: req.body,
+				},
+			});
+
+			res.status(200).send();
+		} catch (error) {
+			next(error);
+		}
+	});
+
+	router.delete('/announcement/:id', auth, async (req, res, next) => {
+		try {
+			await Announcement.destroy({
+				where: {
+					id: req.params.id,
 				},
 			});
 

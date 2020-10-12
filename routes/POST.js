@@ -1,12 +1,23 @@
-const express = require('express');
-const router = express.Router();
 const { pick } = require('lodash');
 const { sequelize } = require('../models');
+const twilio = require('twilio')(
+	process.env.TWILIO_ACCOUNT_SID,
+	process.env.TWILIO_AUTH_TOKEN
+);
+
 const {
-	models: { User, Student, Event, StudentsEvents, PracticeNote },
+	models: {
+		Announcement,
+		Event,
+		PracticeNote,
+		Student,
+		StudentsEvents,
+		User,
+	},
 } = sequelize;
 
 const auth = require('../middleware/auth');
+const announcement = require('../models/announcement');
 
 module.exports = router => {
 	router.post('/student', auth, async (req, res, next) => {
@@ -67,6 +78,73 @@ module.exports = router => {
 				...event.get({ plain: true }),
 				Students: req.body.Students,
 			});
+		} catch (error) {
+			await transaction.rollback();
+			next(error);
+		}
+	});
+
+	router.post('/announcement', auth, async (req, res, next) => {
+		let transaction = await sequelize.transaction();
+
+		try {
+			let user = await User.findOne({
+				where: { auth0Id: req.user.sub },
+				transaction,
+			});
+
+			const annoucement = await Announcement.create(
+				{
+					...pick(req.body, 'text'),
+					UserId: user.id,
+				},
+				{ transaction }
+			);
+
+			await transaction.commit();
+			res.json(annoucement);
+		} catch (error) {
+			await transaction.rollback();
+			next(error);
+		}
+	});
+
+	router.post('/announcement/:id/send', auth, async (req, res, next) => {
+		let transaction = await sequelize.transaction();
+
+		try {
+			let user = await User.findOne({
+				where: { auth0Id: req.user.sub },
+				include: [
+					{
+						model: Student,
+						attributes: ['id', 'phoneNumber'],
+						where: {
+							id: req.body,
+						},
+					},
+					{
+						model: Announcement,
+						where: {
+							id: req.params.id,
+						},
+					},
+				],
+				transaction,
+			});
+
+			await Promise.all(
+				user.Students.map(({ phoneNumber }) =>
+					twilio.messages.create({
+						body: user.Announcements[0].text,
+						from: process.env.TWILIO_PHONE,
+						to: phoneNumber,
+					})
+				)
+			);
+
+			await transaction.commit();
+			res.json({ sucess: true });
 		} catch (error) {
 			await transaction.rollback();
 			next(error);

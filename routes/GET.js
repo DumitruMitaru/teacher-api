@@ -3,7 +3,14 @@ const router = express.Router();
 const { pick } = require('lodash');
 const { sequelize } = require('../models');
 const {
-	models: { User, Student, Event, StudentsEvents, PracticeNote },
+	models: {
+		Announcement,
+		Event,
+		PracticeNote,
+		Student,
+		StudentsEvents,
+		User,
+	},
 } = sequelize;
 
 const auth = require('../middleware/auth');
@@ -62,9 +69,24 @@ module.exports = router => {
 					{
 						model: PracticeNote,
 					},
+					{
+						model: User,
+						include: [
+							{
+								model: Announcement,
+								attributes: ['text', 'createdAt'],
+								limit: 4,
+								order: [['createdAt', 'DESC']],
+							},
+						],
+					},
 				],
 				order: [[PracticeNote, 'createdAt', 'ASC']],
 			});
+
+			student = student.get({ plain: true });
+			student.Announcements = student.User.Announcements;
+			delete student.User.Announcements;
 
 			res.json(student);
 		} catch (error) {
@@ -94,6 +116,24 @@ module.exports = router => {
 			});
 
 			res.json(user?.Events || []);
+		} catch (error) {
+			next(error);
+		}
+	});
+
+	router.get('/announcement', auth, async (req, res, next) => {
+		try {
+			let user = await User.findOne({
+				where: { auth0Id: req.user.sub },
+				include: [
+					{
+						model: Announcement,
+					},
+				],
+				order: [[Announcement, 'createdAt', 'desc']],
+			});
+
+			res.json(user?.Announcements || []);
 		} catch (error) {
 			next(error);
 		}
