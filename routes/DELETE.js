@@ -37,5 +37,19 @@ module.exports = router => {
 		}
 	});
 
+	router.delete('/student/:id', auth, async (req, res, next) => {
+		try {
+			await Student.destroy({
+				where: {
+					id: req.params.id,
+				},
+			});
+
+			res.status(200).send();
+		} catch (error) {
+			next(error);
+		}
+	});
+
 	return router;
 };
