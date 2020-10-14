@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "nodemon ./bin/www",
+    "start": "node ./bin/www",
     "migrate": "node_modules/.bin/sequelize db:migrate",
     "migrate:undo": "node_modules/.bin/sequelize db:migrate:undo",
     "model:create": "node_modules/.bin/sequelize model:generate --name"
@@ -31,5 +31,7 @@
     "twilio": "^3.49.4",
     "uuid": "^8.3.0"
   },
-  "devDependencies": {}
+  "engines": {
+    "node": "14.5.0"
+  }
 }
