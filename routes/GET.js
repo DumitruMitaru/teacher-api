@@ -65,6 +65,12 @@ module.exports = router => {
 							model: StudentsEvents,
 							attributes: [],
 						},
+						include: [
+							{
+								model: Student,
+								attributes: ['firstName', 'lastName'],
+							},
+						],
 					},
 					{
 						model: PracticeNote,
