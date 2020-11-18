@@ -58,6 +58,13 @@ module.exports = router => {
 				name,
 				description,
 			} = await getUploadDataFromRequest(req);
+
+			if (!['video', 'image', 'audio'].includes(type)) {
+				throw new Error(
+					'Please only select video, image or audio files.'
+				);
+			}
+
 			const { Location: url } = await uploadToS3(
 				uuidv4(),
 				buffer,
