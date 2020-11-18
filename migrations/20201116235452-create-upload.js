@@ -13,7 +13,11 @@ module.exports = {
 				allowNull: false,
 			},
 			type: {
-				type: Sequelize.STRING(10),
+				type: Sequelize.STRING(100),
+				allowNull: false,
+			},
+			subType: {
+				type: Sequelize.STRING(100),
 				allowNull: false,
 			},
 			name: {

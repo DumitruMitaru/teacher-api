@@ -13,13 +13,13 @@ module.exports = {
 	getUploadDataFromRequest,
 };
 
-function uploadToS3(fileName, buffer, type) {
+function uploadToS3(fileName, buffer, type, subType) {
 	const params = {
 		ACL: 'public-read',
 		Body: buffer,
 		Bucket: process.env.S3_BUCKET,
-		ContentType: type.mime,
-		Key: `${fileName}.${type.ext}`,
+		ContentType: type,
+		Key: `${fileName}.${subType}`,
 	};
 	return s3.upload(params).promise();
 }
@@ -40,12 +40,15 @@ async function getUploadDataFromRequest(req) {
 
 	const path = files.file[0].path;
 	const buffer = fs.readFileSync(path);
-	const type = await fileType.fromBuffer(buffer);
+	const { mime } = await fileType.fromBuffer(buffer);
+
+	const [type, subType] = mime.split('/');
 
 	return {
 		name: fields.name[0],
 		description: fields.description[0],
 		buffer,
 		type,
+		subType,
 	};
 }

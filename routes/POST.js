@@ -54,18 +54,24 @@ module.exports = router => {
 			const {
 				buffer,
 				type,
+				subType,
 				name,
 				description,
 			} = await getUploadDataFromRequest(req);
-
-			const { Location: url } = await uploadToS3(uuidv4(), buffer, type);
+			const { Location: url } = await uploadToS3(
+				uuidv4(),
+				buffer,
+				type,
+				subType
+			);
 
 			const upload = await Upload.create({
 				UserId: user.id,
 				name,
 				description,
 				url,
-				type: type.ext,
+				type,
+				subType,
 			});
 
 			res.status(200).json({
