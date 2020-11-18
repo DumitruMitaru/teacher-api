@@ -10,10 +10,12 @@ const {
 		Student,
 		StudentsEvents,
 		User,
+		Upload,
 	},
 } = sequelize;
 
 const auth = require('../middleware/auth');
+const { getUploadDataFromRequest } = require('../lib');
 
 module.exports = router => {
 	router.put('/student/:id', auth, async (req, res, next) => {
@@ -69,6 +71,26 @@ module.exports = router => {
 			);
 
 			res.json(announcement);
+		} catch (error) {
+			next(error);
+		}
+	});
+
+	router.put('/upload/:id', auth, async (req, res, next) => {
+		try {
+			const { name, description } = await getUploadDataFromRequest(req);
+			const [_, [upload]] = await Upload.update(
+				{
+					name,
+					description,
+				},
+				{
+					where: { id: req.params.id },
+					returning: true,
+				}
+			);
+
+			res.json(upload);
 		} catch (error) {
 			next(error);
 		}

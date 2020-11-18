@@ -13,7 +13,7 @@ module.exports = {
 				allowNull: false,
 			},
 			type: {
-				type: Sequelize.STRING(100),
+				type: Sequelize.ENUM('video', 'audio', 'image'),
 				allowNull: false,
 			},
 			subType: {

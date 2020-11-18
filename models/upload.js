@@ -26,7 +26,7 @@ module.exports = (sequelize, DataTypes) => {
 				allowNull: false,
 			},
 			type: {
-				type: DataTypes.STRING(100),
+				type: DataTypes.ENUM('video', 'audio', 'image'),
 				allowNull: false,
 			},
 			subType: {
