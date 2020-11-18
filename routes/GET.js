@@ -10,6 +10,7 @@ const {
 		Student,
 		StudentsEvents,
 		User,
+		Upload,
 	},
 } = sequelize;
 
@@ -46,6 +47,34 @@ module.exports = router => {
 			});
 
 			res.json(user?.Students || []);
+		} catch (error) {
+			next(error);
+		}
+	});
+
+	router.get('/upload', auth, async (req, res, next) => {
+		try {
+			let user = await User.findOne({
+				where: { auth0Id: req.user.sub },
+				include: [
+					{
+						model: Upload,
+						include: [
+							{
+								model: User,
+								attributes: ['email'],
+							},
+							{
+								model: Student,
+								attributes: ['firstName', 'lastName'],
+							},
+						],
+					},
+				],
+				order: [[Upload, 'createdAt', 'DESC']],
+			});
+
+			res.json(user?.Uploads || []);
 		} catch (error) {
 			next(error);
 		}

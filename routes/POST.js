@@ -1,9 +1,13 @@
 const { pick } = require('lodash');
 const { sequelize } = require('../models');
+const { v4: uuidv4 } = require('uuid');
+
 const twilio = require('twilio')(
 	process.env.TWILIO_ACCOUNT_SID,
 	process.env.TWILIO_AUTH_TOKEN
 );
+
+const { uploadToS3, getUploadDataFromRequest } = require('../lib');
 
 const {
 	models: {
@@ -13,11 +17,11 @@ const {
 		Student,
 		StudentsEvents,
 		User,
+		Upload,
 	},
 } = sequelize;
 
 const auth = require('../middleware/auth');
-const announcement = require('../models/announcement');
 
 module.exports = router => {
 	router.post('/student', auth, async (req, res, next) => {
@@ -36,6 +40,38 @@ module.exports = router => {
 			});
 
 			res.json(student);
+		} catch (error) {
+			next(error);
+		}
+	});
+
+	router.post('/upload', auth, async (req, res, next) => {
+		try {
+			let user = await User.findOne({
+				where: { auth0Id: req.user.sub },
+			});
+
+			const {
+				buffer,
+				type,
+				name,
+				description,
+			} = await getUploadDataFromRequest(req);
+
+			const { Location: url } = await uploadToS3(uuidv4(), buffer, type);
+
+			const upload = await Upload.create({
+				UserId: user.id,
+				name,
+				description,
+				url,
+				type: type.ext,
+			});
+
+			res.status(200).json({
+				...upload.get({ plain: true }),
+				User: { email: user.email },
+			});
 		} catch (error) {
 			next(error);
 		}

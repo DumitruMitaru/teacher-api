@@ -10,6 +10,7 @@ module.exports = (sequelize, DataTypes) => {
 		static associate(models) {
 			// define association here
 			this.hasMany(models.PracticeNote);
+			this.hasMany(models.Upload);
 			this.belongsTo(models.User);
 			this.belongsToMany(models.Event, {
 				through: models.StudentsEvents,
