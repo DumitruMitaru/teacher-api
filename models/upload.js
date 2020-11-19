@@ -11,6 +11,10 @@ module.exports = (sequelize, DataTypes) => {
 			// define association here
 			this.belongsTo(models.User);
 			this.belongsTo(models.Student);
+			this.belongsToMany(models.Student, {
+				through: models.StudentsUploads,
+				as: 'Students',
+			});
 		}
 	}
 	Upload.init(

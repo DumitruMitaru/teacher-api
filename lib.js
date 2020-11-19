@@ -46,13 +46,13 @@ async function getUploadDataFromRequest(req) {
 		buffer = fs.readFileSync(files.file[0].path);
 
 		const { mime } = await fileType.fromBuffer(buffer);
-
 		[type, subType] = mime.split('/');
 	}
 
 	return {
 		name: fields.name[0],
 		description: fields.description[0],
+		Students: JSON.parse(fields.Students[0]),
 		buffer,
 		type,
 		subType,

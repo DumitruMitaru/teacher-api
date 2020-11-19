@@ -9,8 +9,9 @@ const {
 		PracticeNote,
 		Student,
 		StudentsEvents,
-		User,
+		StudentsUploads,
 		Upload,
+		User,
 	},
 } = sequelize;
 
@@ -67,6 +68,15 @@ module.exports = router => {
 							{
 								model: Student,
 								attributes: ['firstName', 'lastName'],
+							},
+							{
+								model: Student,
+								as: 'Students',
+								attributes: ['id', 'firstName', 'lastName'],
+								through: {
+									model: StudentsUploads,
+									attributes: [],
+								},
 							},
 						],
 					},

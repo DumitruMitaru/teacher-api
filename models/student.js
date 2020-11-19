@@ -15,6 +15,9 @@ module.exports = (sequelize, DataTypes) => {
 			this.belongsToMany(models.Event, {
 				through: models.StudentsEvents,
 			});
+			this.belongsToMany(models.Upload, {
+				through: models.StudentsUploads,
+			});
 		}
 	}
 	Student.init(

@@ -78,7 +78,11 @@ module.exports = router => {
 
 	router.put('/upload/:id', auth, async (req, res, next) => {
 		try {
-			const { name, description } = await getUploadDataFromRequest(req);
+			const {
+				name,
+				description,
+				Students,
+			} = await getUploadDataFromRequest(req);
 			const [_, [upload]] = await Upload.update(
 				{
 					name,
@@ -90,7 +94,9 @@ module.exports = router => {
 				}
 			);
 
-			res.json(upload);
+			await upload.setStudents(Students.map(({ id }) => id));
+
+			res.json({ ...upload.get({ plain: true }), Students });
 		} catch (error) {
 			next(error);
 		}

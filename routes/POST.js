@@ -16,6 +16,7 @@ const {
 		PracticeNote,
 		Student,
 		StudentsEvents,
+		StudentsUploads,
 		User,
 		Upload,
 	},
@@ -57,6 +58,7 @@ module.exports = router => {
 				subType,
 				name,
 				description,
+				Students,
 			} = await getUploadDataFromRequest(req);
 
 			if (!['video', 'image', 'audio'].includes(type)) {
@@ -81,9 +83,12 @@ module.exports = router => {
 				subType,
 			});
 
+			await upload.setStudents(Students.map(({ id }) => id));
+
 			res.status(200).json({
 				...upload.get({ plain: true }),
 				User: { email: user.email },
+				Students,
 			});
 		} catch (error) {
 			next(error);
