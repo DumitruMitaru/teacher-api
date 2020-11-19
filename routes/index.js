@@ -1,16 +1,21 @@
 const express = require('express');
 let router = express.Router();
+const fs = require('fs');
+const path = require('path');
+const basename = path.basename(__filename);
 const { flow } = require('lodash');
-const { sequelize } = require('../models');
-const {
-	models: { User, Student, Event, StudentsEvents },
-} = sequelize;
 
-const auth = require('../middleware/auth');
+const routeDecorators = fs
+	.readdirSync(__dirname)
+	.filter(file => {
+		return (
+			file.indexOf('.') !== 0 &&
+			file !== basename &&
+			file.slice(-3) === '.js'
+		);
+	})
+	.map(file => {
+		return require(path.join(__dirname, file));
+	});
 
-const getRoutes = require('./GET');
-const postRoutes = require('./POST');
-const putRoutes = require('./PUT');
-const deleteRoutes = require('./DELETE');
-
-module.exports = flow([getRoutes, postRoutes, putRoutes, deleteRoutes])(router);
+module.exports = flow(routeDecorators)(router);
