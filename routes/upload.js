@@ -10,6 +10,7 @@ const {
 		User,
 	},
 } = sequelize;
+const { v4: uuidv4 } = require('uuid');
 
 const auth = require('../middleware/auth');
 const { uploadToS3, getUploadDataFromRequest } = require('../lib');
@@ -27,7 +28,7 @@ module.exports = router => {
 				subType,
 				name,
 				description,
-				Students,
+				taggedStudents,
 			} = await getUploadDataFromRequest(req);
 
 			if (!['video', 'image', 'audio'].includes(type)) {
@@ -52,12 +53,12 @@ module.exports = router => {
 				subType,
 			});
 
-			await upload.setStudents(Students.map(({ id }) => id));
+			await upload.setTaggedStudents(taggedStudents.map(({ id }) => id));
 
 			res.status(200).json({
 				...upload.get({ plain: true }),
 				User: { email: user.email },
-				Students,
+				taggedStudents,
 			});
 		} catch (error) {
 			next(error);
@@ -69,7 +70,7 @@ module.exports = router => {
 			const {
 				name,
 				description,
-				Students,
+				taggedStudents,
 			} = await getUploadDataFromRequest(req);
 			const [_, [upload]] = await Upload.update(
 				{
@@ -82,9 +83,9 @@ module.exports = router => {
 				}
 			);
 
-			await upload.setStudents(Students.map(({ id }) => id));
+			await upload.setTaggedStudents(taggedStudents.map(({ id }) => id));
 
-			res.json({ ...upload.get({ plain: true }), Students });
+			res.json({ ...upload.get({ plain: true }), taggedStudents });
 		} catch (error) {
 			next(error);
 		}
@@ -108,7 +109,7 @@ module.exports = router => {
 							},
 							{
 								model: Student,
-								as: 'Students',
+								as: 'taggedStudents',
 								attributes: ['id', 'firstName', 'lastName'],
 								through: {
 									model: StudentsUploads,

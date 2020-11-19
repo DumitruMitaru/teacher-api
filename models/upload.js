@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
 			this.belongsTo(models.Student);
 			this.belongsToMany(models.Student, {
 				through: models.StudentsUploads,
-				as: 'Students',
+				as: 'taggedStudents',
 			});
 		}
 	}

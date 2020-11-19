@@ -16,6 +16,7 @@ module.exports = (sequelize, DataTypes) => {
 				through: models.StudentsEvents,
 			});
 			this.belongsToMany(models.Upload, {
+				as: 'taggedUploads',
 				through: models.StudentsUploads,
 			});
 		}

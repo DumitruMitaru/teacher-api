@@ -52,7 +52,7 @@ async function getUploadDataFromRequest(req) {
 	return {
 		name: fields.name[0],
 		description: fields.description[0],
-		Students: JSON.parse(fields.Students[0]),
+		taggedStudents: JSON.parse(fields.taggedStudents[0]),
 		buffer,
 		type,
 		subType,
