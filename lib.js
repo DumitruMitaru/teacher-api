@@ -9,8 +9,9 @@ const s3 = new AWS.S3({
 });
 
 module.exports = {
-	uploadToS3,
+	deleteFromS3,
 	getUploadDataFromRequest,
+	uploadToS3,
 };
 
 function uploadToS3(fileName, buffer, type, subType) {
@@ -22,6 +23,15 @@ function uploadToS3(fileName, buffer, type, subType) {
 		Key: `${fileName}.${subType}`,
 	};
 	return s3.upload(params).promise();
+}
+
+function deleteFromS3(fileName) {
+	return s3
+		.deleteObject({
+			Bucket: process.env.S3_BUCKET,
+			Key: fileName,
+		})
+		.promise();
 }
 
 async function getUploadDataFromRequest(req) {

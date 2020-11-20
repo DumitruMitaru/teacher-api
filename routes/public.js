@@ -1,4 +1,8 @@
-const { uploadToS3, getUploadDataFromRequest } = require('../lib');
+const {
+	deleteFromS3,
+	getUploadDataFromRequest,
+	uploadToS3,
+} = require('../lib');
 const { v4: uuidv4 } = require('uuid');
 const { sequelize } = require('../models');
 const { pick, uniqBy } = require('lodash');
@@ -288,20 +292,20 @@ module.exports = router => {
 						},
 					],
 				});
+				const [upload] = student.Uploads;
 
 				if (!student) {
 					throw new Error('Student not found');
 				}
 
-				if (student.Uploads.length === 0) {
-					throw new Error('Upload not found');
+				if (!upload) {
+					throw new Error('File not found');
 				}
+				const fileName = upload.url.split('/').pop();
 
-				await Upload.destroy({
-					where: {
-						id: req.params.id,
-					},
-				});
+				await deleteFromS3(fileName);
+
+				await upload.destroy();
 
 				res.status(200).send();
 			} catch (error) {

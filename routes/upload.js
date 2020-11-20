@@ -13,7 +13,11 @@ const {
 const { v4: uuidv4 } = require('uuid');
 
 const auth = require('../middleware/auth');
-const { uploadToS3, getUploadDataFromRequest } = require('../lib');
+const {
+	deleteFromS3,
+	getUploadDataFromRequest,
+	uploadToS3,
+} = require('../lib');
 
 module.exports = router => {
 	router.post('/upload', auth, async (req, res, next) => {
@@ -130,11 +134,27 @@ module.exports = router => {
 
 	router.delete('/upload/:id', auth, async (req, res, next) => {
 		try {
-			await Upload.destroy({
-				where: {
-					id: req.params.id,
-				},
+			const upload = await Upload.findByPk(req.params.id, {
+				include: [
+					{
+						model: User,
+						where: {
+							auth0Id: req.user.sub,
+						},
+						required: true,
+					},
+				],
 			});
+
+			if (!upload) {
+				throw new Error('File not found');
+			}
+
+			const fileName = upload.url.split('/').pop();
+
+			await deleteFromS3(fileName);
+
+			await upload.destroy();
 
 			res.status(200).send();
 		} catch (error) {
