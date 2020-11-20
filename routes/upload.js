@@ -40,6 +40,9 @@ module.exports = router => {
 					'Please only select video, image or audio files.'
 				);
 			}
+			res.type('application/json');
+
+			let interval = setInterval(() => res.write(' '), 20 * 1000);
 
 			const { Location: url } = await uploadToS3(
 				uuidv4(),
@@ -47,6 +50,8 @@ module.exports = router => {
 				type,
 				subType
 			);
+
+			clearInterval(interval);
 
 			const upload = await Upload.create({
 				UserId: user.id,
@@ -59,11 +64,13 @@ module.exports = router => {
 
 			await upload.setTaggedStudents(taggedStudents.map(({ id }) => id));
 
-			res.status(200).json({
-				...upload.get({ plain: true }),
-				User: { email: user.email },
-				taggedStudents,
-			});
+			res.end(
+				JSON.stringify({
+					...upload.get({ plain: true }),
+					User: { email: user.email },
+					taggedStudents,
+				})
+			);
 		} catch (error) {
 			next(error);
 		}
