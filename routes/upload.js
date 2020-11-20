@@ -42,7 +42,7 @@ module.exports = router => {
 			}
 			res.type('application/json');
 
-			let interval = setInterval(() => res.write(' '), 20 * 1000);
+			let interval = setInterval(() => res.write(' '), 5 * 1000);
 
 			const { Location: url } = await uploadToS3(
 				uuidv4(),
