@@ -1,4 +1,5 @@
 const { sequelize } = require('../models');
+const { pick } = require('lodash');
 const {
 	models: {
 		Announcement,
@@ -15,6 +16,7 @@ const { v4: uuidv4 } = require('uuid');
 const auth = require('../middleware/auth');
 const {
 	deleteFromS3,
+	getSignedUrlForS3,
 	getUploadDataFromRequest,
 	uploadToS3,
 } = require('../lib');
@@ -26,51 +28,25 @@ module.exports = router => {
 				where: { auth0Id: req.user.sub },
 			});
 
-			const {
-				buffer,
-				type,
-				subType,
-				name,
-				description,
-				taggedStudents,
-			} = await getUploadDataFromRequest(req);
-
-			if (!['video', 'image', 'audio'].includes(type)) {
-				throw new Error(
-					'Please only select video, image or audio files.'
-				);
-			}
-			res.type('application/json');
-
-			let interval = setInterval(() => res.write(' '), 5 * 1000);
-
-			const { Location: url } = await uploadToS3(
-				uuidv4(),
-				buffer,
-				type,
-				subType
-			);
-
-			clearInterval(interval);
-
+			const taggedStudents = req.body.taggedStudents;
 			const upload = await Upload.create({
 				UserId: user.id,
-				name,
-				description,
-				url,
-				type,
-				subType,
+				...pick(req.body, [
+					'name',
+					'description',
+					'url',
+					'type',
+					'subType',
+				]),
 			});
 
 			await upload.setTaggedStudents(taggedStudents.map(({ id }) => id));
 
-			res.end(
-				JSON.stringify({
-					...upload.get({ plain: true }),
-					User: { email: user.email },
-					taggedStudents,
-				})
-			);
+			res.json({
+				...upload.get({ plain: true }),
+				User: { email: user.email },
+				taggedStudents,
+			});
 		} catch (error) {
 			next(error);
 		}
@@ -78,16 +54,10 @@ module.exports = router => {
 
 	router.put('/upload/:id', auth, async (req, res, next) => {
 		try {
-			const {
-				name,
-				description,
-				taggedStudents,
-			} = await getUploadDataFromRequest(req);
+			const taggedStudents = req.body.taggedStudents;
+
 			const [_, [upload]] = await Upload.update(
-				{
-					name,
-					description,
-				},
+				pick(req.body, ['name', 'description']),
 				{
 					where: { id: req.params.id },
 					returning: true,
@@ -134,6 +104,16 @@ module.exports = router => {
 			});
 
 			res.json(user?.Uploads || []);
+		} catch (error) {
+			next(error);
+		}
+	});
+
+	router.get('/upload/signed-url', auth, async (req, res, next) => {
+		try {
+			const data = await getSignedUrlForS3(req.query.fileType);
+
+			res.json(data);
 		} catch (error) {
 			next(error);
 		}
