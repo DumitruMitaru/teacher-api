@@ -1,9 +1,8 @@
 const {
 	deleteFromS3,
 	getUploadDataFromRequest,
-	uploadToS3,
+	getSignedUrlForS3,
 } = require('../lib');
-const { v4: uuidv4 } = require('uuid');
 const { sequelize } = require('../models');
 const { pick, uniqBy } = require('lodash');
 const {
@@ -161,9 +160,31 @@ module.exports = router => {
 		}
 	});
 
+	router.get(
+		'/public/upload/signed-url/:publicProfileId',
+		async (req, res, next) => {
+			try {
+				let student = await Student.findOne({
+					where: { publicProfileId: req.params.publicProfileId },
+				});
+
+				if (!student) {
+					throw new Error('Student not found');
+				}
+
+				const data = await getSignedUrlForS3(req.query.fileType);
+
+				res.json(data);
+			} catch (error) {
+				next(error);
+			}
+		}
+	);
+
 	router.post('/public/upload/:publicProfileId', async (req, res, next) => {
 		try {
 			let student = await Student.findOne({
+				attributes: ['id', 'firstName', 'lastName'],
 				where: { publicProfileId: req.params.publicProfileId },
 				include: [
 					{
@@ -176,44 +197,25 @@ module.exports = router => {
 				throw new Error('Student not found');
 			}
 
-			const {
-				buffer,
-				type,
-				subType,
-				name,
-				description,
-				taggedStudents,
-			} = await getUploadDataFromRequest(req);
-
-			if (!['video', 'image', 'audio'].includes(type)) {
-				throw new Error(
-					'Please only select video, image or audio files.'
-				);
-			}
-
-			const { Location: url } = await uploadToS3(
-				uuidv4(),
-				buffer,
-				type,
-				subType
-			);
-
+			const taggedStudents = req.body.taggedStudents;
 			const upload = await Upload.create({
 				UserId: student.User.id,
 				StudentId: student.id,
-				name,
-				description,
-				url,
-				type,
-				subType,
+				...pick(req.body, [
+					'name',
+					'description',
+					'url',
+					'type',
+					'subType',
+				]),
 			});
 
 			await upload.setTaggedStudents(taggedStudents.map(({ id }) => id));
 
-			res.status(200).json({
+			res.json({
 				...upload.get({ plain: true }),
 				User: { email: student.User.email },
-				Student: pick(student, ['id', 'firstName', 'lastName']),
+				Student: student,
 				taggedStudents,
 			});
 		} catch (error) {
@@ -247,17 +249,10 @@ module.exports = router => {
 					throw new Error('Upload not found');
 				}
 
-				const {
-					name,
-					description,
-					taggedStudents,
-				} = await getUploadDataFromRequest(req);
+				const taggedStudents = req.body.taggedStudents;
 
 				const [_, [upload]] = await Upload.update(
-					{
-						name,
-						description,
-					},
+					pick(req.body, ['name', 'description']),
 					{
 						where: { id: req.params.id },
 						returning: true,
@@ -301,9 +296,8 @@ module.exports = router => {
 				if (!upload) {
 					throw new Error('File not found');
 				}
-				const fileName = upload.url.split('/').pop();
 
-				await deleteFromS3(fileName);
+				await deleteFromS3(upload.url);
 
 				await upload.destroy();
 

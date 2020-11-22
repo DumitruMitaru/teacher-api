@@ -137,9 +137,7 @@ module.exports = router => {
 				throw new Error('File not found');
 			}
 
-			const fileName = upload.url.split('/').pop();
-
-			await deleteFromS3(fileName);
+			await deleteFromS3(upload.url);
 
 			await upload.destroy();
 
