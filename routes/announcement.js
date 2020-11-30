@@ -4,6 +4,11 @@ const {
 	models: { User, Student, Event, StudentsEvents, Announcement, Upload },
 } = sequelize;
 
+const twilio = require('twilio')(
+	process.env.TWILIO_ACCOUNT_SID,
+	process.env.TWILIO_AUTH_TOKEN
+);
+
 const auth = require('../middleware/auth');
 
 module.exports = router => {
