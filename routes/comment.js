@@ -23,5 +23,21 @@ module.exports = router => {
 		}
 	});
 
+	router.put('/comment/:id', auth, async (req, res, next) => {
+		try {
+			const [_, [editedComment]] = await Comment.update(
+				{ text: req.body.text },
+				{
+					where: { id: req.params.id },
+					returning: true,
+				}
+			);
+
+			res.json(editedComment);
+		} catch (error) {
+			next(error);
+		}
+	});
+
 	return router;
 };

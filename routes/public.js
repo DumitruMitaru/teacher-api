@@ -307,6 +307,44 @@ module.exports = router => {
 	});
 
 	router.put(
+		'/public/:publicProfileId/comment/:id',
+		async (req, res, next) => {
+			try {
+				const student = await Student.findOne({
+					where: {
+						publicProfileId: req.params.publicProfileId,
+					},
+					include: [
+						{
+							model: Comment,
+							where: {
+								id: req.params.id,
+							},
+						},
+					],
+				});
+
+				if (!student) {
+					throw new Error('Student not found');
+				}
+
+				if (student.Comments.length === 0) {
+					throw new Error('Comment not found');
+				}
+
+				const [comment] = student.Comments;
+
+				comment.text = req.body.text;
+
+				await comment.save();
+				res.json(comment);
+			} catch (error) {
+				next(error);
+			}
+		}
+	);
+
+	router.put(
 		'/public/:publicProfileId/upload/:id',
 		async (req, res, next) => {
 			try {
