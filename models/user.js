@@ -25,6 +25,10 @@ module.exports = (sequelize, DataTypes) => {
 				defaultValue: DataTypes.UUIDV4,
 			},
 			email: DataTypes.STRING,
+			firstName: DataTypes.STRING(50),
+			lastName: DataTypes.STRING(50),
+			phoneNumber: DataTypes.STRING(10),
+			uploadNotifications: DataTypes.BOOLEAN,
 			auth0Id: DataTypes.STRING,
 		},
 		{

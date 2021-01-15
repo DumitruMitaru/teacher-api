@@ -24,5 +24,27 @@ module.exports = router => {
 			next(error);
 		}
 	});
+
+	router.put('/user', auth, async (req, res, next) => {
+		try {
+			const [_, [user]] = await User.update(
+				pick(req.body, [
+					'firstName',
+					'lastName',
+					'phoneNumber',
+					'uploadNotifications',
+				]),
+				{
+					where: { auth0Id: req.user.sub },
+					returning: true,
+				}
+			);
+
+			res.json(user);
+		} catch (error) {
+			next(error);
+		}
+	});
+
 	return router;
 };
