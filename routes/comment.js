@@ -17,25 +17,7 @@ module.exports = router => {
 				UserId: user.id,
 			});
 
-			res.json(comment);
-		} catch (error) {
-			next(error);
-		}
-	});
-
-	router.put('/comment/:id', auth, async (req, res, next) => {
-		try {
-			const [_, [note]] = await PracticeNote.update(
-				{
-					text: req.body.text,
-				},
-				{
-					where: { id: req.params.id },
-					returning: true,
-				}
-			);
-
-			res.json(note);
+			res.json({ ...comment.get({ plain: true }), User: user });
 		} catch (error) {
 			next(error);
 		}

@@ -200,6 +200,16 @@ module.exports = router => {
 					include: [
 						{
 							model: Comment,
+							include: [
+								{
+									model: User,
+									attributes: ['email'],
+								},
+								{
+									model: Student,
+									attributes: ['firstName'],
+								},
+							],
 						},
 					],
 				});
@@ -262,6 +272,7 @@ module.exports = router => {
 				include: [
 					{
 						model: User,
+						attributes: ['id', 'email'],
 					},
 				],
 			});
@@ -276,7 +287,11 @@ module.exports = router => {
 				UserId: student.User.id,
 			});
 
-			res.json(comment);
+			res.json({
+				...comment.get({ plain: true }),
+				Student: pick(student, ['firstName']),
+				User: pick(student.User, ['email']),
+			});
 		} catch (error) {
 			next(error);
 		}

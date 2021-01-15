@@ -111,6 +111,16 @@ module.exports = router => {
 				include: [
 					{
 						model: Comment,
+						include: [
+							{
+								model: User,
+								attributes: ['email'],
+							},
+							{
+								model: Student,
+								attributes: ['firstName'],
+							},
+						],
 					},
 				],
 			});
