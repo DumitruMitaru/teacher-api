@@ -1,6 +1,5 @@
-const { deleteFromS3, getSignedUrlForS3 } = require('../lib');
-const { sequelize } = require('../models');
 const { pick, uniqBy } = require('lodash');
+const { sequelize } = require('../models');
 const {
 	models: {
 		Announcement,
@@ -14,6 +13,8 @@ const {
 		User,
 	},
 } = sequelize;
+
+const { deleteFromS3, getSignedUrlForS3, sendText } = require('../lib');
 
 module.exports = router => {
 	router.get(
@@ -221,7 +222,7 @@ module.exports = router => {
 		}
 	);
 
-	router.post('/public/upload/:publicProfileId', async (req, res, next) => {
+	router.post('/public/:publicProfileId/upload', async (req, res, next) => {
 		try {
 			let student = await Student.findOne({
 				attributes: ['id', 'firstName', 'lastName'],
@@ -258,6 +259,14 @@ module.exports = router => {
 				Student: student,
 				taggedStudents,
 			});
+
+			const { uploadNotifications, phoneNumber } = student.User;
+			if (uploadNotifications && phoneNumber) {
+				await sendText(
+					phoneNumber,
+					`${student.firstName} uploaded a new file named ${upload.name}!!`
+				);
+			}
 		} catch (error) {
 			next(error);
 		}

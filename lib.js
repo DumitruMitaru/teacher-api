@@ -1,7 +1,4 @@
 const AWS = require('aws-sdk');
-const fs = require('fs');
-const fileType = require('file-type');
-const multiparty = require('multiparty');
 const { v4: uuidv4 } = require('uuid');
 
 const s3 = new AWS.S3({
@@ -10,9 +7,15 @@ const s3 = new AWS.S3({
 	region: 'us-west-2',
 });
 
+const twilio = require('twilio')(
+	process.env.TWILIO_ACCOUNT_SID,
+	process.env.TWILIO_AUTH_TOKEN
+);
+
 module.exports = {
 	deleteFromS3,
 	getSignedUrlForS3,
+	sendText,
 };
 
 async function getSignedUrlForS3(fileType) {
@@ -42,4 +45,12 @@ function deleteFromS3(url) {
 			Key: fileName,
 		})
 		.promise();
+}
+
+function sendText(toPhoneNumber, message) {
+	return twilio.messages.create({
+		body: message,
+		from: process.env.TWILIO_PHONE,
+		to: toPhoneNumber,
+	});
 }

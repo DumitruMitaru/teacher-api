@@ -4,12 +4,8 @@ const {
 	models: { User, Student, Event, StudentsEvents, Announcement, Upload },
 } = sequelize;
 
-const twilio = require('twilio')(
-	process.env.TWILIO_ACCOUNT_SID,
-	process.env.TWILIO_AUTH_TOKEN
-);
-
 const auth = require('../middleware/auth');
+const { sendText } = require('../lib');
 
 module.exports = router => {
 	router.post('/announcement', auth, async (req, res, next) => {
@@ -60,13 +56,11 @@ module.exports = router => {
 
 			await Promise.all(
 				user.Students.map(({ phoneNumber }) =>
-					twilio.messages.create({
-						body:
-							user.Announcements[0].text +
-							`\n\nThis message was sent from ${req.user.email}. Please do not reply to this message.`,
-						from: process.env.TWILIO_PHONE,
-						to: phoneNumber,
-					})
+					sendText(
+						phoneNumber,
+						user.Announcements[0].text +
+							`\n\nThis message was sent from ${req.user.email}. Please do not reply to this message.`
+					)
 				)
 			);
 
