@@ -1,20 +1,17 @@
-const {
-	deleteFromS3,
-	getUploadDataFromRequest,
-	getSignedUrlForS3,
-} = require('../lib');
+const { deleteFromS3, getSignedUrlForS3 } = require('../lib');
 const { sequelize } = require('../models');
 const { pick, uniqBy } = require('lodash');
 const {
 	models: {
-		User,
-		Student,
+		Announcement,
+		Comment,
 		Event,
+		PracticeNote,
+		Student,
 		StudentsEvents,
 		StudentsUploads,
-		Announcement,
 		Upload,
-		PracticeNote,
+		User,
 	},
 } = sequelize;
 
@@ -76,6 +73,10 @@ module.exports = router => {
 										model: StudentsUploads,
 										attributes: [],
 									},
+								},
+								{
+									model: Comment,
+									attributes: ['text'],
 								},
 							],
 						},
@@ -181,6 +182,35 @@ module.exports = router => {
 		}
 	);
 
+	router.get(
+		'/public/:publicProfileId/upload/:id/comments',
+		async (req, res, next) => {
+			try {
+				let student = await Student.findOne({
+					where: {
+						publicProfileId: req.params.publicProfileId,
+					},
+				});
+
+				if (!student) {
+					throw new error('Student not found');
+				}
+
+				const upload = await Upload.findByPk(req.params.id, {
+					include: [
+						{
+							model: Comment,
+						},
+					],
+				});
+
+				res.json(upload.Comments);
+			} catch (error) {
+				next(error);
+			}
+		}
+	);
+
 	router.post('/public/upload/:publicProfileId', async (req, res, next) => {
 		try {
 			let student = await Student.findOne({
@@ -218,6 +248,35 @@ module.exports = router => {
 				Student: student,
 				taggedStudents,
 			});
+		} catch (error) {
+			next(error);
+		}
+	});
+
+	router.post('/public/:publicProfileId/comment', async (req, res, next) => {
+		try {
+			let student = await Student.findOne({
+				where: {
+					publicProfileId: req.params.publicProfileId,
+				},
+				include: [
+					{
+						model: User,
+					},
+				],
+			});
+
+			if (!student) {
+				throw new error('Student not found');
+			}
+
+			const comment = await Comment.create({
+				...req.body,
+				StudentId: student.id,
+				UserId: student.User.id,
+			});
+
+			res.json(comment);
 		} catch (error) {
 			next(error);
 		}

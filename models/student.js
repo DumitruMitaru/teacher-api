@@ -11,7 +11,10 @@ module.exports = (sequelize, DataTypes) => {
 			// define association here
 			this.hasMany(models.PracticeNote);
 			this.hasMany(models.Upload);
+			this.hasMany(models.Comment);
+
 			this.belongsTo(models.User);
+
 			this.belongsToMany(models.Event, {
 				through: models.StudentsEvents,
 			});

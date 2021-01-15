@@ -1,25 +1,11 @@
 const { sequelize } = require('../models');
 const { pick } = require('lodash');
 const {
-	models: {
-		Announcement,
-		Event,
-		Student,
-		StudentsEvents,
-		StudentsUploads,
-		Upload,
-		User,
-	},
+	models: { Comment, Student, StudentsUploads, Upload, User },
 } = sequelize;
-const { v4: uuidv4 } = require('uuid');
 
 const auth = require('../middleware/auth');
-const {
-	deleteFromS3,
-	getSignedUrlForS3,
-	getUploadDataFromRequest,
-	uploadToS3,
-} = require('../lib');
+const { deleteFromS3, getSignedUrlForS3 } = require('../lib');
 
 module.exports = router => {
 	router.post('/upload', auth, async (req, res, next) => {
@@ -114,6 +100,22 @@ module.exports = router => {
 			const data = await getSignedUrlForS3(req.query.fileType);
 
 			res.json(data);
+		} catch (error) {
+			next(error);
+		}
+	});
+
+	router.get('/upload/:id/comments', auth, async (req, res, next) => {
+		try {
+			const upload = await Upload.findByPk(req.params.id, {
+				include: [
+					{
+						model: Comment,
+					},
+				],
+			});
+
+			res.json(upload.Comments);
 		} catch (error) {
 			next(error);
 		}

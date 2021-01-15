@@ -15,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
 				through: models.StudentsUploads,
 				as: 'taggedStudents',
 			});
+			this.hasMany(models.Comment);
 		}
 	}
 	Upload.init(
