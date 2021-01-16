@@ -429,5 +429,44 @@ module.exports = router => {
 		}
 	);
 
+	router.delete(
+		'/public/:publicProfileId/comment/:id',
+		async (req, res, next) => {
+			try {
+				const student = await Student.findOne({
+					where: {
+						publicProfileId: req.params.publicProfileId,
+					},
+					include: [
+						{
+							model: Comment,
+							where: {
+								id: req.params.id,
+							},
+						},
+					],
+				});
+
+				if (!student) {
+					throw new Error('Student not found');
+				}
+
+				if (student.Comments.length === 0) {
+					throw new Error('Comment not found');
+				}
+
+				await Comment.destroy({
+					where: {
+						id: req.params.id,
+					},
+				});
+
+				res.status(200).send();
+			} catch (error) {
+				next(error);
+			}
+		}
+	);
+
 	return router;
 };

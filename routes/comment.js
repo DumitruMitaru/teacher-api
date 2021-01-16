@@ -39,5 +39,19 @@ module.exports = router => {
 		}
 	});
 
+	router.delete('/comment/:id', auth, async (req, res, next) => {
+		try {
+			await Comment.destroy({
+				where: {
+					id: req.params.id,
+				},
+			});
+
+			res.status(200).send();
+		} catch (error) {
+			next(error);
+		}
+	});
+
 	return router;
 };
