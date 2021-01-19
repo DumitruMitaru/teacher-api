@@ -41,6 +41,8 @@ module.exports = (sequelize, DataTypes) => {
 			lastName: DataTypes.STRING,
 			email: DataTypes.STRING,
 			phoneNumber: DataTypes.STRING(10),
+			paymentAmount: DataTypes.DECIMAL(10, 2),
+			paymentInterval: DataTypes.ENUM(['weekly', 'monthly']),
 		},
 		{
 			sequelize,

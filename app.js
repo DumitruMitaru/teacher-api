@@ -1,3 +1,4 @@
+const { mapValues } = require('lodash');
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
@@ -14,6 +15,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Sanitize request body
+app.use(function (req, res, next) {
+	if (req.body) {
+		req.body = mapValues(req.body, value => (value === '' ? null : value));
+	}
+	next();
+});
 
 app.use('/', routes);
 

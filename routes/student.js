@@ -1,3 +1,4 @@
+const { pick } = require('lodash');
 const { sequelize } = require('../models');
 const {
 	models: { User, Student, Event, StudentsEvents, Announcement, Upload },
@@ -12,12 +13,15 @@ module.exports = router => {
 				where: { auth0Id: req.user.sub },
 			});
 
-			const { firstName, lastName, phoneNumber, email } = req.body;
 			const student = await Student.create({
-				firstName,
-				lastName,
-				email,
-				phoneNumber,
+				...pick(req.body, [
+					'firstName',
+					'lastName',
+					'email',
+					'phoneNumber',
+					'paymentAmount',
+					'paymentInterval',
+				]),
 				UserId: user.id,
 			});
 
@@ -29,14 +33,15 @@ module.exports = router => {
 
 	router.put('/student/:id', auth, async (req, res, next) => {
 		try {
-			const { firstName, lastName, phoneNumber, email } = req.body;
 			const [_, [student]] = await Student.update(
-				{
-					firstName,
-					lastName,
-					email,
-					phoneNumber,
-				},
+				pick(req.body, [
+					'firstName',
+					'lastName',
+					'email',
+					'phoneNumber',
+					'paymentAmount',
+					'paymentInterval',
+				]),
 				{
 					where: { id: req.params.id },
 					returning: true,
